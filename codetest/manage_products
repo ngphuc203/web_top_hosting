@@ -1,0 +1,195 @@
+<?php
+session_start();
+
+// Thông tin kết nối cơ sở dữ liệu MySQL
+$servername = "localhost";
+$username = "root";
+$password = "";
+$database = "doanv2"; // Tên cơ sở dữ liệu của bạn
+
+// Kết nối MySQL
+$conn = new mysqli($servername, $username, $password, $database);
+
+// Kiểm tra kết nối
+if ($conn->connect_error) {
+    die("Kết nối thất bại: " . $conn->connect_error);
+}
+
+// Xử lý xóa sản phẩm
+if (isset($_POST['delete'])) {
+    $productId = $_POST['delete'];
+
+    // Xóa sản phẩm khỏi cơ sở dữ liệu
+    $stmt = $conn->prepare("DELETE FROM products WHERE product_id = ?");
+    $stmt->bind_param("i", $productId);  // Sử dụng "i" cho kiểu INT
+    $stmt->execute();
+    $stmt->close();
+
+    $_SESSION['message'] = "Sản phẩm đã được xóa thành công!";
+    header("Location: manage_products.php");
+    exit;
+}
+
+// Xử lý thêm sản phẩm
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (isset($_POST['add'])) {
+        // Thêm sản phẩm mới
+        $productName = $_POST['product_name'];
+        $productDesc = $_POST['product_desc'];
+        $productPrice = $_POST['product_price'];
+        $productQty = $_POST['product_qty'];
+        $productImage = null;
+
+        // Xử lý hình ảnh nếu có tải lên
+        if (isset($_FILES['product_image']) && $_FILES['product_image']['error'] === UPLOAD_ERR_OK) {
+            $imageName = uniqid() . '_' . $_FILES['product_image']['name'];
+            $imageTmp = $_FILES['product_image']['tmp_name'];
+            $imagePath = 'uploads/' . $imageName;
+            move_uploaded_file($imageTmp, $imagePath);
+            $productImage = $imagePath;
+        }
+
+        // Thêm sản phẩm mới vào cơ sở dữ liệu
+        $stmt = $conn->prepare("INSERT INTO products (name, description, price, quantity, image) VALUES (?, ?, ?, ?, ?)");
+        $stmt->bind_param("sssds", $productName, $productDesc, $productPrice, $productQty, $productImage);
+        $stmt->execute();
+        $stmt->close();
+
+        $_SESSION['message'] = "Sản phẩm đã được thêm thành công!";
+        header("Location: manage_products.php");
+        exit;
+    }
+
+    // Cập nhật sản phẩm
+    if (isset($_POST['update_products'])) {
+        $updatedProducts = $_POST['products'];
+
+        // Cập nhật từng sản phẩm
+        foreach ($updatedProducts as $updatedProduct) {
+            $productId = $updatedProduct['product_id'];  // Sử dụng product_id
+            $productName = $updatedProduct['name'];
+            $productDesc = $updatedProduct['description'];
+            $productPrice = (float)$updatedProduct['price'];
+            $productQty = (int)$updatedProduct['quantity'];
+
+            // Cập nhật sản phẩm trong cơ sở dữ liệu
+            $stmt = $conn->prepare("UPDATE products SET name = ?, description = ?, price = ?, quantity = ? WHERE product_id = ?");
+            $stmt->bind_param("ssdsi", $productName, $productDesc, $productPrice, $productQty, $productId);
+            $stmt->execute();
+            $stmt->close();
+        }
+
+        $_SESSION['message'] = "Cập nhật sản phẩm thành công!";
+        header("Location: manage_products.php");
+        exit;
+    }
+}
+
+// Lấy danh sách sản phẩm từ cơ sở dữ liệu
+$result = $conn->query("SELECT * FROM products");
+$products = [];
+if ($result->num_rows > 0) {
+    while ($row = $result->fetch_assoc()) {
+        $products[] = $row;
+    }
+}
+$conn->close();
+?>
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản Lý Sản Phẩm</title>
+    <link rel="stylesheet" href="./style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <h3>Chào mừng, <?php echo $_SESSION['username']; ?> (Admin)</h3>
+    <section id="header">
+        <ul id="navbar">
+            <a href="./admin_dashboard.php"><img src="./img/logo.png"class="logo" style="width:30%; height: 10%;"></a>
+            <li><a href="./admin_dashboard.php">Trang Chủ</a></li>
+            <li><a href="./manage_products.php">Quản Lý Sản Phẩm</a></li>
+            <li><a href="./manage_customers.php">Quản Lý Khách Hàng</a></li>
+            <li><a href="./manage_orders.php">Quản Lý Đơn Hàng</a></li>
+            <li><a href="./logout.php">Đăng Xuất</a></li>
+        </ul>
+    </section>
+    <h1>Quản Lý Sản Phẩm</h1>
+
+    <!-- Hiển thị thông báo -->
+    <?php if (isset($_SESSION['message'])): ?>
+        <div class="message">
+            <?php
+                echo $_SESSION['message'];
+                unset($_SESSION['message']); // Xóa thông báo sau khi hiển thị
+            ?>
+        </div>
+    <?php endif; ?>
+
+    <!-- Form Thêm Sản Phẩm -->
+    <form method="POST" enctype="multipart/form-data">
+        <h3>Thêm Sản Phẩm</h3>
+        <label for="product_name">Tên Sản Phẩm:</label><br>
+        <input type="text" name="product_name" required><br>
+
+        <label for="product_desc">Mô Tả:</label><br>
+        <textarea name="product_desc" required></textarea><br>
+
+        <label for="product_price">Giá:</label><br>
+        <input type="number" name="product_price" required><br>
+
+        <label for="product_qty">Số Lượng:</label><br>
+        <input type="number" name="product_qty" required><br>
+
+        <label for="product_image">Hình Ảnh:</label><br>
+        <input type="file" name="product_image" accept="image/*"><br>
+        
+        <button type="submit" name="add">Thêm Sản Phẩm</button>
+    </form>
+
+    <div>
+        <!-- Form Hiển Thị Danh Sách Sản Phẩm -->
+    <h1>Danh Sách Sản Phẩm</h1>
+    <form method="POST">
+        <h3>Danh Sách Sản Phẩm</h3>
+        <table border="1">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Tên</th>
+                    <th>Mô Tả</th>
+                    <th>Giá</th>
+                    <th>Số Lượng</th>
+                    <th>Hình Ảnh</th>
+                    <th>Thao Tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($products as $index => $product): ?>
+                    <tr>
+                        <td><?php echo $product['product_id']; ?></td>
+                        <td><input type="text" name="products[<?php echo $index; ?>][name]" value="<?php echo $product['name']; ?>"></td>
+                        <td><textarea name="products[<?php echo $index; ?>][description]"><?php echo $product['description']; ?></textarea></td>
+                        <td><input type="number" name="products[<?php echo $index; ?>][price]" value="<?php echo $product['price']; ?>"></td>
+                        <td><input type="number" name="products[<?php echo $index; ?>][quantity]" value="<?php echo $product['quantity']; ?>"></td>
+                        <td><img src="<?php echo $product['image']; ?>" width="100"></td>
+                        <td>
+                            <form method="POST" action="manage_products.php" onsubmit="return confirm('Bạn có chắc muốn xóa sản phẩm này?');">
+                                <input type="hidden" name="delete" value="<?php echo $product['product_id']; ?>">
+                                <button type="submit">Xóa</button>
+                            </form>
+                        </td>
+                    </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+        <button type="submit" name="update_products">Lưu Thay Đổi</button>
+    </form>
+    </div>
+</body>
+</html>
+
+

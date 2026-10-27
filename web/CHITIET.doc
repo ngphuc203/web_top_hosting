@@ -1,0 +1,62 @@
+
+Header
+    + Trang chủ (mới,hot)
+    + Trang sản phẩm 
+    + Nhân vật (hover tên + ảnh random) 
+    + Mega (hover kích cỡ + ảnh radom)
+    + Tìm kiếm (ảnh,tên,giá, phổ biến và lịch sử tìm kiếm)
+
+Signup
+    + Số điện thoại
+    + Email (API gửi code xác nhận)
+
+
+Product_details.php 
+    + Phóng to ảnh đã chọn
+    + Hiển thị nhiều ảnh  (quá số lượng đẩy ảnh)
+    + Phần đề xuất sản phẩm hot (random)
+    
+Cart.php
+    + Tên danh mục
+    + Tên sản phẩm
+    + Giá (thay đổi theo số lượng)
+    + Số lượng (thay đổi theo icon)
+    + Click kiểm tra sản phẩm -> Product_details
+    + TOTAL
+        - Checkout (button)
+        - Continue shopping (link)
+        - Shipping & returns (link(hover icon))
+        - API phản hồi mail xác nhận 
+
+
+Trang sản phẩm 
+    +Danh mục sản phẩm 
+    +Lọc theo danh mục sản phẩm 
+    +Thêm sắp xếp (hot,giá)
+
+
+
+Admin_dashboard
+    + Top sản phẩm bán chạy
+    + Phân loại tài khoản
+    + Quản lí danh mục, sản phẩm, khách hàng, đơn hàng
+    + Bảng biểu đồ 
+
+
+Manage_orders
+    + Lọc phương thức thanh toán, loại đơn 
+    + Xem doanh thu từng tháng 
+
+
+Manage_products
+    + Thêm danh mục sản phẩm (Nhân vật, kích cỡ) 
+    + Thêm danh mục kích cỡ sản phẩm 
+    + Quản lí danh mục
+    + Tên sản phẩm
+    + kích cỡ sản phẩm 
+    + Mô tả chi tiết sản phẩm ( chỉ hiện ở trang product_details.php )
+    + Hình ảnh (1 ảnh chính hiện ở trang products.php, thêm nhiều ảnh ở trang product_details.php)
+
+
+storeNavigation,store-nav-dropdown store-nav-categories làm chuyên nghiệp hơn giúp tôi ở trạng thái điện thoại 
+							
